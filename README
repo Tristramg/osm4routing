@@ -1,0 +1,87 @@
+This tool provides an OpenStreetMap data parser to turn them into a nodes-edges
+adapted for routing applications.
+
+== INPUT FORMAT ==
+The input is an OpenStreetMap XML file. The file can be read:
+* from a plain .osm file
+* from a bz2 file
+* from stdin
+
+== OUTPUT FORMAT ==
+The output can be:
+* a csv file
+* postgis database (geographical extension to postgres).
+
+In both output you'll get two files/tables:
+* nodes that contain
+    * id (64 bit integer)
+    * longitude (decimal real)
+    * latitude (decimal real)
+
+* edges that contain
+    * id (64 bit integer)
+    * source node id (64 bit integer)
+    * target node id (64 bit integer)
+    * length (real in meters),
+    * car accessibility (integer)
+    * car reverse accessibility (integer)
+    * bike accessibility (integer)
+    * bike reverse accessibility (integer)
+    * foot accessibility (integer)
+    * geometry (string representing a linestring in the WKT format)
+
+The accessibility is an integer describing the edge for every mean of transport.
+As for cars an bikes the driving direction might change those properties, the
+are direct (source->target direction) an reverse (target->source direction)
+information.
+
+The integers mean:
+* cars 
+    * 0 forbiden
+    * 1 residential street
+    * 2 tertiary road
+    * 3 secondary road
+    * 4 primary road
+    * 5 trunk
+    * 6 motorway
+* bike
+    * 0 forbiden
+    * 1 cycling lane in the opposite direction of the car flow
+    * 2 allowed without specific equipment
+    * 3 cycling lane
+    * 4 bus lane allowed for cycles
+    * 5 cycling track
+* foot (no distinction in made on the direction)
+    * 0 forbiden
+    * 1 allowed
+
+
+== INSTALL ==
+You need:
+* the GCC C++ complier (g++)
+* Boost
+* expat (XML parser)
+* libbz2 (Bzip2)
+* libpq (postgres)
+
+Run make and it should compile.
+
+
+== USAGE == 
+Get the .osm XML file of the region that interests you.
+For limited regions, use the export tools from the web interface.
+For bigger regions you might find what you want at http://download.geofabrik.de/osm/
+
+To know the options, run:
+./osm4routing --help
+
+
+== Postgres output ==
+The database must be a postgis database.
+The usual way to get is to execute the following commands (the location of
+lwpostgis.sql and spatial_ref_sys.sql depend on your installation).
+
+createdb yourdatabase
+createlang plpgsql yourdatabase
+psql -d yourdatabase -f lwpostgis.sql
+psql -d yourdatabase -f spatial_ref_sys.sql
