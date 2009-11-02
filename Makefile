@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-W -Wall -ansi -pedantic -g -Wno-deprecated 
+CXXFLAGS=-W -Wall -ansi -pedantic -O3 -Wno-deprecated 
 LDFLAGS=-lexpat -lbz2 -lpq -lboost_program_options -lboost_filesystem
 EXEC=osm4routing
 
