@@ -69,7 +69,14 @@ PqWriter::PqWriter(const std::string & conn_str, const std::string & nodes_table
         }
         PQclear(res);
 
-        res = PQexec(conn, ("SELECT AddGeometryColumn('" + edges_table + "','the_geom',4326,'LINESTRING',2)").c_str());
+        res = PQexec(conn, ("SELECT AddGeometryColumn('" + nodes_table + "','the_geom',4326,'POINT',2)").c_str());
+        if (PQresultStatus(res) != PGRES_TUPLES_OK)
+        {
+            std::cerr << "Unable to add a geometry column on table " << nodes_table <<  PQerrorMessage(conn) << std::endl;
+        }
+        PQclear(res);
+
+res = PQexec(conn, ("SELECT AddGeometryColumn('" + edges_table + "','the_geom',4326,'LINESTRING',2)").c_str());
         if (PQresultStatus(res) != PGRES_TUPLES_OK)
         {
             std::cerr << "Unable to add a geometry column on table " << edges_table <<  PQerrorMessage(conn) << std::endl;
@@ -91,7 +98,7 @@ PqWriter::PqWriter(const std::string & conn_str, const std::string & nodes_table
 
     res = PQprepare(conn,
             "add_node",
-            ("INSERT INTO " + nodes_table + " VALUES($1, $2, $3)").c_str() ,
+            ("INSERT INTO " + nodes_table + " VALUES($1, $2, $3, $4)").c_str() ,
             0,
             NULL);
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
@@ -120,12 +127,15 @@ int PqWriter::save_nodes(const NodeMapType & nodes)
     {
         if( (*i).second.uses > 1 )
         {
-            const char * params[3] = {
+            std::stringstream geom;
+            geom << "SRID=4326;POINT(" << i->second.lon << " " << i->second.lat << ")";
+            const char * params[4] = {
                 lexical_cast<std::string>(i->first).c_str(),
                 lexical_cast<std::string>(i->second.lon).c_str(),
-                lexical_cast<std::string>(i->second.lat).c_str()
+                lexical_cast<std::string>(i->second.lat).c_str(),
+                geom.str().c_str()
             };
-            res = PQexecPrepared(conn, "add_node", 3, params, NULL, NULL, 0);
+            res = PQexecPrepared(conn, "add_node", 4, params, NULL, NULL, 0);
             if (PQresultStatus(res) != PGRES_COMMAND_OK)
             {
                 std::cerr << "Unable to add node in table " << nodes_table <<  PQerrorMessage(conn) << std::endl;
@@ -190,6 +200,7 @@ PqWriter::~PqWriter()
     query += "ALTER TABLE " + edges_table + " ADD FOREIGN KEY (source) REFERENCES " + nodes_table;
     query += ";ALTER TABLE " + edges_table + " ADD FOREIGN KEY (target) REFERENCES " + nodes_table;
     query += ";CREATE INDEX idx_edges ON " + edges_table + " USING gist(the_geom)";
+    query += ";CREATE INDEX idx_nodes ON " + nodes_table + " USING gist(the_geom)";
     res = PQexec(conn, query.c_str());
     if( PQresultStatus(res) != PGRES_COMMAND_OK)
     {
