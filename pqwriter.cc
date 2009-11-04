@@ -199,8 +199,8 @@ PqWriter::~PqWriter()
     std::string query = "alter table " + edges_table + " add primary key (id);";
     query += "ALTER TABLE " + edges_table + " ADD FOREIGN KEY (source) REFERENCES " + nodes_table;
     query += ";ALTER TABLE " + edges_table + " ADD FOREIGN KEY (target) REFERENCES " + nodes_table;
-    query += ";CREATE INDEX idx_edges ON " + edges_table + " USING gist(the_geom)";
-    query += ";CREATE INDEX idx_nodes ON " + nodes_table + " USING gist(the_geom)";
+    query += ";CREATE INDEX idx_" + edges_table + " ON " + edges_table + " USING gist(the_geom)";
+    query += ";CREATE INDEX idx_" + nodes_table + " ON " + nodes_table + " USING gist(the_geom)";
     res = PQexec(conn, query.c_str());
     if( PQresultStatus(res) != PGRES_COMMAND_OK)
     {
