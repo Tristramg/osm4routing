@@ -299,7 +299,7 @@ main(int argc, char** argv)
     tmp.open("temp_ways");
     node_t id, source=0;
     stringstream geom;
-    float length = 0, pred_lon = 0, pred_lat = 0;
+    double length = 0, pred_lon = 0, pred_lat = 0;
     char car_direct, car_rev, foot, bike_direct, bike_rev;
     int nb;
     int edges_inserted = 0;
