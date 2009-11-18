@@ -80,7 +80,7 @@ struct Node
     uint64_t id;
     double lon;
     double lat;
-    ushort uses;
+    char uses;
 
     Node() : uses(0) {};
 
