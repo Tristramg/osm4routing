@@ -19,7 +19,7 @@
 #include <iostream>
 #include <map>
 #include <ext/hash_map>
-#include <tr1/functional_hash.h>
+#include <boost/functional/hash.hpp>
 #include <cstring>
 #include <bitset>
 #include <iomanip>
@@ -80,7 +80,7 @@ struct Node
     uint64_t id;
     float lon;
     float lat;
-    ushort uses;
+    char uses;
 
     Node() : uses(0) {};
 
@@ -88,7 +88,7 @@ struct Node
         id(_id), lon(_lon), lat(_lat), uses(0)
     {};
 };
-typedef __gnu_cxx::hash_map<uint64_t, Node, std::tr1::hash<uint64_t> >NodeMapType;
+typedef __gnu_cxx::hash_map<uint64_t, Node, boost::hash<uint64_t> >NodeMapType;
 
 #endif /* _MAIN_H */
 
