@@ -17,7 +17,6 @@
 
 #include "main.h"
 #include "cmath"
-#include <hash_set>
 #include <deque>
 #include "stdinreader.h"
 #include "bz2reader.h"
@@ -47,7 +46,7 @@ node_t current_way;
 
 double rad(double deg)
 {
-    return deg * M_PIl / 180;
+    return deg * 3.14159265 / 180;
 }
 
 double distance(double lon1, double lat1, double lon2, double lat2)
