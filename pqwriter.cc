@@ -55,14 +55,14 @@ PqWriter::PqWriter(const std::string & conn_str, const std::string & nodes_table
             std::cerr << "Unable to drop table " << nodes_table <<  PQerrorMessage(conn) << std::endl;
         }
         PQclear(res);
-        res = PQexec(conn, ("CREATE TABLE " + nodes_table + " (ID bigint, lon real, lat real)").c_str());
+        res = PQexec(conn, ("CREATE TABLE " + nodes_table + " (ID bigint, lon double precision, lat double precision)").c_str());
         if (PQresultStatus(res) != PGRES_COMMAND_OK)
         {
             std::cerr << "Unable to create table " << nodes_table <<  PQerrorMessage(conn) << std::endl;
         }
         PQclear(res);
 
-        res = PQexec(conn, ("CREATE TABLE " + edges_table + " (ID integer, source bigint, target bigint, length real, car smallint, car_rev smallint, bike smallint, bike_rev smallint, foot smallint)").c_str());      
+        res = PQexec(conn, ("CREATE TABLE " + edges_table + " (ID integer, source bigint, target bigint, length double precision, car smallint, car_rev smallint, bike smallint, bike_rev smallint, foot smallint)").c_str());      
         if (PQresultStatus(res) != PGRES_COMMAND_OK)
         {
             std::cerr << "Unable to create table " << edges_table <<  PQerrorMessage(conn) << std::endl;

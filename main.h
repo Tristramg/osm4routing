@@ -78,9 +78,9 @@ class Edge_property
 struct Node
 {
     uint64_t id;
-    float lon;
-    float lat;
-    char uses;
+    double lon;
+    double lat;
+    ushort uses;
 
     Node() : uses(0) {};
 
