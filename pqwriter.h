@@ -27,10 +27,11 @@ class PqWriter : public Writer
     PGconn     *conn;
     std::string nodes_table;
     std::string edges_table;
+    std::string format;
     bool drop_table;
     public:
 
-    PqWriter(const std::string & conn_str, const std::string & nodes_table, const std::string & edges_table, bool drop_table = true);
+    PqWriter(const std::string & conn_str, const std::string & nodes_table, const std::string & edges_table, bool drop_table = true, std::string & format);
 
     int save_nodes(const NodeMapType & nodes);
 

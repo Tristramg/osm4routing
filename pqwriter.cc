@@ -21,7 +21,7 @@
 
 using boost::lexical_cast;
 
-PqWriter::PqWriter(const std::string & conn_str, const std::string & nodes_table, const std::string & edges_table, bool drop_table) :
+PqWriter::PqWriter(const std::string & conn_str, const std::string & nodes_table, const std::string & edges_table, bool drop_table, const std::string & format) :
     nodes_table(nodes_table),
     edges_table(edges_table),
     drop_table(drop_table)
@@ -55,6 +55,7 @@ PqWriter::PqWriter(const std::string & conn_str, const std::string & nodes_table
             std::cerr << "Unable to drop table " << nodes_table <<  PQerrorMessage(conn) << std::endl;
         }
         PQclear(res);
+        
         res = PQexec(conn, ("CREATE TABLE " + nodes_table + " (ID bigint, lon double precision, lat double precision)").c_str());
         if (PQresultStatus(res) != PGRES_COMMAND_OK)
         {
@@ -62,7 +63,15 @@ PqWriter::PqWriter(const std::string & conn_str, const std::string & nodes_table
         }
         PQclear(res);
 
-        res = PQexec(conn, ("CREATE TABLE " + edges_table + " (ID integer, source bigint, target bigint, length double precision, car smallint, car_rev smallint, bike smallint, bike_rev smallint, foot smallint)").c_str());      
+		if(format == "pg")
+		{
+        	res = PQexec(conn, ("CREATE TABLE " + edges_table + " (ID integer, source bigint, target bigint, length double precision, car smallint, car_rev smallint, bike smallint, bike_rev smallint, foot smallint)").c_str());
+        }
+        else if(format == "pgr")
+        {
+        	res = PQexec(conn, ("CREATE TABLE " + edges_table + " (ID integer, source bigint, x1 float, y1 float, target bigint, x2 float, y2 float, length double precision, to_cost double precision, reverse_cost double precision, rule text, car smallint, car_rev smallint, bike smallint, bike_rev smallint, foot smallint)").c_str());      
+        }   
+           
         if (PQresultStatus(res) != PGRES_COMMAND_OK)
         {
             std::cerr << "Unable to create table " << edges_table <<  PQerrorMessage(conn) << std::endl;
@@ -76,7 +85,7 @@ PqWriter::PqWriter(const std::string & conn_str, const std::string & nodes_table
         }
         PQclear(res);
 
-res = PQexec(conn, ("SELECT AddGeometryColumn('" + edges_table + "','the_geom',4326,'LINESTRING',2)").c_str());
+		res = PQexec(conn, ("SELECT AddGeometryColumn('" + edges_table + "','the_geom',4326,'LINESTRING',2)").c_str());
         if (PQresultStatus(res) != PGRES_TUPLES_OK)
         {
             std::cerr << "Unable to add a geometry column on table " << edges_table <<  PQerrorMessage(conn) << std::endl;
@@ -84,11 +93,25 @@ res = PQexec(conn, ("SELECT AddGeometryColumn('" + edges_table + "','the_geom',4
         PQclear(res);
     }
 
-    res = PQprepare(conn,
+	if(format == "pg")
+	{
+    	res = PQprepare(conn,
             "add_edge",
-            ("INSERT INTO " + edges_table + " VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)").c_str() ,
+            ("INSERT INTO " + edges_table + 
+  			 " VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)").c_str() ,
             0,
             NULL);
+    }
+    else if(format == "pgr")
+    {
+    	res = PQprepare(conn,
+    	    "add_edge",
+    	    ("INSERT INTO " + edges_table + " (ID, source, x1, y1, target, x2, y2, length, reverse_cost, car,
+    	     car_rev, bike, bike_rev, foot) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)").c_str() ,
+    	    0,
+    	    NULL);
+    }        
+            
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
         std::cerr << "Unable to prepare SQL query for adding edges in table " << edges_table <<  PQerrorMessage(conn) << std::endl;
@@ -113,9 +136,6 @@ res = PQexec(conn, ("SELECT AddGeometryColumn('" + edges_table + "','the_geom',4
         std::cerr << "Unable to start transaction (nodes) " << PQerrorMessage(conn) << std::endl;
     }
     PQclear(res);
-
-
-
 
 }
 
@@ -164,20 +184,48 @@ void PqWriter::save_edge(int edge_id,
 
     PGresult * res;
     std::string tmp_geom = "SRID=4326;LINESTRING(" + geom + ")";
-    const char * params[10] = {
-        lexical_cast<std::string>(edge_id).c_str(),
-        lexical_cast<std::string>(source).c_str(),
-        lexical_cast<std::string>(target).c_str(),
-        lexical_cast<std::string>(length).c_str(),
-        lexical_cast<std::string>(car).c_str(),
-        lexical_cast<std::string>(car_d).c_str(),
-        lexical_cast<std::string>(bike).c_str(),
-        lexical_cast<std::string>(bike_d).c_str(),
-        lexical_cast<std::string>(foot).c_str(),
-        tmp_geom.c_str()
-    };
+    
+    if(format == "pg")
+    {
+	    const char * params[10] = {
+	        lexical_cast<std::string>(edge_id).c_str(),
+	        lexical_cast<std::string>(source).c_str(),
+	        lexical_cast<std::string>(target).c_str(),
+	        lexical_cast<std::string>(length).c_str(),
+	        lexical_cast<std::string>(car).c_str(),
+	        lexical_cast<std::string>(car_d).c_str(),
+	        lexical_cast<std::string>(bike).c_str(),
+	        lexical_cast<std::string>(bike_d).c_str(),
+	        lexical_cast<std::string>(foot).c_str(),
+	        tmp_geom.c_str()
+	    };
+	    
+	    res = PQexecPrepared(conn, "add_edge", 10, params, NULL, NULL, 0);
+	}
+	else if(format == "pgr")
+	{
+		const char * params[14] = {
+		    lexical_cast<std::string>(edge_id).c_str(),
+		    lexical_cast<std::string>(source).c_str(),
+		    lexical_cast<std::string>(source.lon).c_str(),
+		    lexical_cast<std::string>(source.lat).c_str(),
+		    lexical_cast<std::string>(target).c_str(),
+		    lexical_cast<std::string>(target.lon).c_str(),
+		    lexical_cast<std::string>(target.lat).c_str(),
+		    lexical_cast<std::string>(length).c_str(),
+		    lexical_cast<std::string>(length).c_str(),
+		    lexical_cast<std::string>(car).c_str(),
+		    lexical_cast<std::string>(car_d).c_str(),
+		    lexical_cast<std::string>(bike).c_str(),
+		    lexical_cast<std::string>(bike_d).c_str(),
+		    lexical_cast<std::string>(foot).c_str(),
+		    tmp_geom.c_str()
+		};
+		
+		res = PQexecPrepared(conn, "add_edge", 14, params, NULL, NULL, 0);
+	}
 
-    res = PQexecPrepared(conn, "add_edge", 10, params, NULL, NULL, 0);
+    
     if (PQresultStatus(res) != PGRES_COMMAND_OK)
     {
         std::cerr << "Unable to add edge in table " << edges_table <<  PQerrorMessage(conn) << std::endl;
