@@ -8,6 +8,5 @@ class Reader
     public:
     virtual int read(char * buff, int buffsize) = 0;
     virtual bool eof() const = 0;
-    virtual ~Reader(){};
 };
 #endif
