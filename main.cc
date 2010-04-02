@@ -170,7 +170,7 @@ main(int argc, char** argv)
         ("help,h", "produce help message")
         ("version,v", "show version")
         ("in-format", po::value<string>(&informat)->default_value("auto"), "input data format:\n    auto: \tguess from file extension. If no input file is given, read from stdin\n    bz2: \tbzip2 compressed file\n    stdin: \tstandart input\n    osm: \tuncompressed XML file")
-        ("out-format", po::value<string>(&outformat)->default_value("csv"), "output data format:\n    csv: \tnodes and edges as csv files\n    pg: \tpostgres/postgis database. The database MUST be a postgis geographical database\n    pgr: \tpostgres postgis database with edges formatted for pgrouting package. uses same pg options\n")
+        ("out-format", po::value<string>(&outformat)->default_value("csv"), "output data format:\n    csv: \tnodes and edges as csv files\n    pg: \tpostgres/postgis database. The database MUST be a postgis geographical database")
         ;
 
     string pg_conn, pg_nodes, pg_edges;
@@ -289,8 +289,8 @@ main(int argc, char** argv)
 
     //===================== STEP 2 ==========================//
     Writer * writer;
-    if(outformat == "pg" || outformat == "pgr")
-        writer = new PqWriter(pg_conn, pg_nodes, pg_edges, outformat);
+    if(outformat == "pg")
+        writer = new PqWriter(pg_conn, pg_nodes, pg_edges);
     else if (outformat == "csv")
         writer = new CSVWriter(csv_nodes, csv_edges);
     cout << "Step 2: building edges and saving them" << endl;
