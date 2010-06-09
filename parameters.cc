@@ -15,7 +15,8 @@
     along with osm4routing.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "main.h"
+#include "parse.h"
+#include <iostream>
 Edge_property::Edge_property() :
         car_direct(unknown),
         car_reverse(unknown),

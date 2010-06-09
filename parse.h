@@ -1,34 +1,9 @@
-/*
-    This file is part of osm4routing.
-
-    osm4routing is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Mumoro is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with osm4routing.  If not, see <http://www.gnu.org/licenses/>.
-*/
 #include <expat.h>
-#include <string>
-#include <iostream>
-#include <map>
-#include <ext/hash_map>
-#include <boost/functional/hash.hpp>
-#include <cstring>
-#include <bitset>
-#include <iomanip>
+#include <boost/unordered_map.hpp>
+#include <vector>
 #include <fstream>
-#include <stdint.h>
 #include <sstream>
 
-#ifndef _MAIN_H
-#define _MAIN_H
 
 typedef uint64_t node_t;
 const int unknown = -1;
@@ -88,7 +63,51 @@ struct Node
         id(_id), lon(_lon), lat(_lat), uses(0)
     {};
 };
-typedef __gnu_cxx::hash_map<uint64_t, Node, boost::hash<uint64_t> >NodeMapType;
 
-#endif /* _MAIN_H */
+struct Edge
+{ 
+    int edge_id;
+    int source;
+    int target;
+    float length;
+    char car;
+    char car_d;
+    char bike;
+    char bike_d;
+    char foot;
+    std::string geom;
+    Edge() {}
+    Edge(int e, int s, int t, float l, char c, char cd, char b, char bd, char f, const std::string & str) :
+        edge_id(e), source(s), target(t), length(l),
+        car(c), car_d(cd), bike(b), bike_d(bd), foot(f),
+        geom(str)
+    {}
+};
 
+
+typedef boost::unordered_map<uint64_t, Node> NodeMapType;
+
+struct Parser
+{
+    Node * source;
+    Node * prev;
+    std::stringstream geom;
+    NodeMapType nodes;
+    node_t ways_count;
+    int edge_length;
+    node_t ways_progress;
+    Edge_property ep;
+    double length;
+    XML_Parser parser;
+    std::ofstream temp_edges;
+    std::vector<node_t> way_nodes;
+    node_t current_way;
+
+    Parser();
+    void read(char *, int, bool);
+    std::vector<Node> get_nodes() const;
+    std::vector<Edge> get_edges() const;
+    int get_osm_nodes() const;
+    int get_osm_ways() const;
+
+};
