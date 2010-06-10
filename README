@@ -59,20 +59,23 @@ The integers mean:
 
 == INSTALL ==
 You need:
-* Boost
+* Boost (only for unordered_map that will be included in C++1X)
 * expat (XML parser)
 * python
 * swig
 
+# Just run the following command
+sudo python setup.py install
+# Run it
+osm4routing --help
+
+# Alternative:
+# If you don't have the rights to install it system-wide, or don't want to, use virtualenv:
 # Create a virtual environment and activate it
 python virtualenv.py env
 source env/bin/activate
-
-# Get python dependencies and build the application
-python setup.py develop
-
-# Run it
-python parse.py --help
+python setup.py install
+osm4routing --help
 
 
 == USAGE == 
