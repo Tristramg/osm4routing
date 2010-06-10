@@ -1,4 +1,4 @@
-%module osm4routing
+%module osm4routing_xml
 %include "std_vector.i"
 %include "std_string.i"
 %{

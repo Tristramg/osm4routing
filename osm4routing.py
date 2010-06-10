@@ -1,10 +1,31 @@
-from osm4routing import *
+from osm4routing_xml import *
 from progressbar import ProgressBar
 import os
 import bz2, gzip
 import sys
 from optparse import OptionParser
+from sqlalchemy import Table, Column, MetaData, Integer, String, Float, SmallInteger, create_engine
+from sqlalchemy.orm import mapper, sessionmaker
 
+class Node(object):
+    def __init__(self, id, lon, lat):
+        self.id = id
+        self.lon = lon
+        self.lat = lat
+
+
+class Edge(object):
+    def __init__(self, id, source, target, length, car, car_rev, bike, bike_rev, foot, the_geom):
+        self.id = id
+        self.source = source
+        self.target = target
+        self.length = length
+        self.car = car
+        self.car_rev = car_rev
+        self.bike = bike
+        self.bike_rev = bike
+        self.foot = foot
+        self.the_geom = the_geom
 
 def parse(file, outformat="csv", edges_name="edges", nodes_name="nodes", conn = ""):
 
@@ -39,19 +60,53 @@ def parse(file, outformat="csv", edges_name="edges", nodes_name="nodes", conn = 
 
     print "  Read {0} nodes and {1} ways\n".format(p.get_osm_nodes(), p.get_osm_ways())
 
+    if outformat != "csv":
+        metadata = MetaData()
+        nodes_table = Table(nodes_name, metadata,
+                Column('id', Integer, primary_key = True),
+                Column('lon', Float),
+                Column('lat', Float))
+        
+        edges_table = Table(edges_name, metadata,
+            Column('id', Integer, primary_key=True),
+            Column('source', Integer, index=True),
+            Column('target', Integer, index=True),
+            Column('length', Float),
+            Column('car', SmallInteger),
+            Column('car_rev', SmallInteger),
+            Column('bike', SmallInteger),
+            Column('bike_rev', SmallInteger),
+            Column('foot', SmallInteger),
+            Column('the_geom', String))
+
+        engine = create_engine(conn)
+        metadata.drop_all(engine)
+        metadata.create_all(engine) 
+        mapper(Node, nodes_table)
+        mapper(Edge, nodes_table)
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+
     print "Step 2: saving the nodes"
     nodes = p.get_nodes()
     if outformat == "csv":
         n = open(nodes_name + '.csv', 'w')
         n.write('"node_id","longitude","latitude"\n')
+
     pbar = ProgressBar(maxval=len(nodes))
     count = 0
     for node in nodes:
         if outformat == "csv":
             n.write("{0},{1},{2}\n".format(node.id, node.lon, node.lat))
+        else:
+            session.add(Node(node.id, node.lon, node.lat))
         count += 1
         pbar.update(count)
-    n.close()
+    if outformat == "csv":
+        n.close()
+    else:
+        session.commit()
     pbar.finish()
 
     print "  Wrote {0} nodes\n".format(count)
@@ -66,9 +121,14 @@ def parse(file, outformat="csv", edges_name="edges", nodes_name="nodes", conn = 
     for edge in edges:
         if outformat == "csv":
             e.write('{0},{1},{2},{3},{4},{5},{6},{7},{8},LINESTRING("{9}")\n'.format(edge.edge_id, edge.source, edge.target, edge.length, edge.car, edge.car_d, edge.bike, edge.bike_d, edge.foot, edge.geom))
+        else:
+            session.add(Edge(edge.edge_id, edge.source, edge.target, edge.length, edge.car, edge.car_d, edge.bike, edge.bike_d, edge.foot, edge.geom))
         count += 1
         pbar.update(count)
-    e.close()
+    if outformat == "csv":
+        e.close()
+    else:
+        session.commit()
     pbar.finish()
     print "  Wrote {0} edges\n".format(count)
 

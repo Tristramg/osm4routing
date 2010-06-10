@@ -8,19 +8,17 @@ setup(name='Osm4routing',
       author_email = 'tristramg@gmail.com',
       url = 'http://github.com/Tristramg/osm4routing/',
       install_requires = ['progressbar', 'sqlalchemy', 'setuptools-git'],
-      py_modules = ['parse', 'osm4routing'],
+      py_modules = ['osm4routing', 'osm4routing_xml'],
 
       ext_modules = [
-          Extension("_osm4routing",
+          Extension("_osm4routing_xml",
               sources=["parse.cc", "parameters.cc", "parse.i"],
               swig_opts=['-c++'],
+              include_dirs=['.'],
               libraries=['expat'])
           ],
        entry_points = {
-           'console_scripts': ['osm4routing = parse:main'],
-           'setuptools.installation': ['eggsecutable = parse:main',
-        ]
-
+           'console_scripts': ['osm4routing = osm4routing:main'],
         }
 
       )
