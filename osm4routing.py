@@ -13,7 +13,6 @@ class Node(object):
         self.lon = lon
         self.lat = lat
 
-
 class Edge(object):
     def __init__(self, id, source, target, length, car, car_rev, bike, bike_rev, foot, the_geom):
         self.id = id
@@ -27,11 +26,37 @@ class Edge(object):
         self.foot = foot
         self.the_geom = the_geom
 
-def parse(file, outformat="csv", edges_name="edges", nodes_name="nodes", conn = ""):
+def parse(file, output="csv", edges_name="edges", nodes_name="nodes"):
 
     if not os.path.exists(file):
-        sys.stderr.write("File {0} doesn't exist\n".format(file))
-        sys.exit(1)
+        raise IOError("File {0} not found".format(file))
+
+    if output != "csv":
+        metadata = MetaData()
+        nodes_table = Table(nodes_name, metadata,
+                Column('id', Integer, primary_key = True),
+                Column('lon', Float),
+                Column('lat', Float))
+        
+        edges_table = Table(edges_name, metadata,
+            Column('id', Integer, primary_key=True),
+            Column('source', Integer, index=True),
+            Column('target', Integer, index=True),
+            Column('length', Float),
+            Column('car', SmallInteger),
+            Column('car_rev', SmallInteger),
+            Column('bike', SmallInteger),
+            Column('bike_rev', SmallInteger),
+            Column('foot', SmallInteger),
+            Column('the_geom', String))
+
+        engine = create_engine(output)
+        metadata.drop_all(engine)
+        metadata.create_all(engine) 
+        mapper(Node, nodes_table)
+        mapper(Edge, nodes_table)
+        Session = sessionmaker(bind=engine)
+        session = Session()
 
     extension = os.path.splitext(file)[1]
     if extension == '.bz2':
@@ -60,50 +85,22 @@ def parse(file, outformat="csv", edges_name="edges", nodes_name="nodes", conn = 
 
     print "  Read {0} nodes and {1} ways\n".format(p.get_osm_nodes(), p.get_osm_ways())
 
-    if outformat != "csv":
-        metadata = MetaData()
-        nodes_table = Table(nodes_name, metadata,
-                Column('id', Integer, primary_key = True),
-                Column('lon', Float),
-                Column('lat', Float))
-        
-        edges_table = Table(edges_name, metadata,
-            Column('id', Integer, primary_key=True),
-            Column('source', Integer, index=True),
-            Column('target', Integer, index=True),
-            Column('length', Float),
-            Column('car', SmallInteger),
-            Column('car_rev', SmallInteger),
-            Column('bike', SmallInteger),
-            Column('bike_rev', SmallInteger),
-            Column('foot', SmallInteger),
-            Column('the_geom', String))
-
-        engine = create_engine(conn)
-        metadata.drop_all(engine)
-        metadata.create_all(engine) 
-        mapper(Node, nodes_table)
-        mapper(Edge, nodes_table)
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
-
     print "Step 2: saving the nodes"
     nodes = p.get_nodes()
-    if outformat == "csv":
+    if output == "csv":
         n = open(nodes_name + '.csv', 'w')
         n.write('"node_id","longitude","latitude"\n')
 
     pbar = ProgressBar(maxval=len(nodes))
     count = 0
     for node in nodes:
-        if outformat == "csv":
+        if output == "csv":
             n.write("{0},{1},{2}\n".format(node.id, node.lon, node.lat))
         else:
             session.add(Node(node.id, node.lon, node.lat))
         count += 1
         pbar.update(count)
-    if outformat == "csv":
+    if output == "csv":
         n.close()
     else:
         session.commit()
@@ -115,17 +112,17 @@ def parse(file, outformat="csv", edges_name="edges", nodes_name="nodes", conn = 
     edges = p.get_edges()
     pbar = ProgressBar(maxval=len(edges))
     count = 0
-    if outformat == "csv":
+    if output == "csv":
         e = open(edges_name + '.csv', 'w')
         e.write('"edge_id","source","target","length","car","car reverse","bike","bike reverse","foot","WKT"\n')
     for edge in edges:
-        if outformat == "csv":
+        if output == "csv":
             e.write('{0},{1},{2},{3},{4},{5},{6},{7},{8},LINESTRING("{9}")\n'.format(edge.edge_id, edge.source, edge.target, edge.length, edge.car, edge.car_d, edge.bike, edge.bike_d, edge.foot, edge.geom))
         else:
             session.add(Edge(edge.edge_id, edge.source, edge.target, edge.length, edge.car, edge.car_d, edge.bike, edge.bike_d, edge.foot, edge.geom))
         count += 1
         pbar.update(count)
-    if outformat == "csv":
+    if output == "csv":
         e.close()
     else:
         session.commit()
@@ -141,20 +138,24 @@ input_file must be an OSM/XML file. It can be compressed with gzip (.gz) or bzip
 
 
     parser = OptionParser(usage)
-    parser.add_option("-o", "--out_format", dest="out_format", default="csv", help="Output format [default: %default]")
+    parser.add_option("-o", "--output", dest="output", default="csv",
+            help="""'csv' if you want a simple file,
+a connection string to use a database (Example: sqlite:///foo.db postgresql://john@localhost/my_database)
+[default: %default]""")
     parser.add_option("-n", "--nodes_name", dest="nodes_name", default="nodes", help="Name of the file or table where nodes are stored [default: %default]")
     parser.add_option("-e", "--edges_name", dest="edges_name", default="edges", help="Name of the file or table where edges are stored [default: %default]")
-    parser.add_option("-d", "--db_params", dest="database_parameters", help="Parameters to connect to the database")
     (options, args) = parser.parse_args()
 
-    if options.out_format != "csv" and not options.database_parameters:
-        sys.stderr.write("Missing database parameter\n")
-        sys.exit(1)
     if len(args) != 1:
         sys.stderr.write("Wrong number of argumented. Expected 1, got {0}\n".format(len(args)))
         sys.exit(1)
 
-    parse(args[0], options.out_format, options.edges_name, options.nodes_name, options.database_parameters)
+    try:
+        parse(args[0], options.output, options.edges_name, options.nodes_name)
+    except IOError as e:
+        sys.stderr.write("I/O error: {0}\n".format(e))
+    except Exception as e:
+        sys.stderr.write("Woops... an error occured: {0}\n".format(e))
 
 if __name__ == "__main__":
     main()
