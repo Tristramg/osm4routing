@@ -60,6 +60,7 @@ The integers mean:
 == INSTALL ==
 You need:
 * Boost (only for unordered_map that will be included in C++1X)
+    Read bellow if you have troubles with it
 * expat (XML parser)
 * python
 * swig
@@ -77,6 +78,11 @@ source env/bin/activate
 python setup.py install
 osm4routing --help
 
+* Installing boost:
+    You only need the headers. If you have a linux distribution, just install it.
+    Under windows or macOSX, grab the sources and unzip them. Place the boost directory
+    containing the headers in the same directory as setup.py
+    An alternative is to edit setup.py to tell where the directory is located.
 
 == USAGE == 
 Get the .osm XML file of the region that interests you.
