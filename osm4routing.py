@@ -36,9 +36,9 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes"):
         metadata = MetaData()
         nodes_table = Table(nodes_name, metadata,
                 Column('id', Integer, primary_key = True),
-                Column('original_id', Text, Index = True),
-                Column('lon', Float, Index = True),
-                Column('lat', Float, Index = True),
+                Column('original_id', String, index = True),
+                Column('lon', Float, index = True),
+                Column('lat', Float, index = True),
                 Column('the_geom', String)
                 )
         
