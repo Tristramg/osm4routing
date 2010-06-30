@@ -8,10 +8,11 @@ from sqlalchemy import Table, Column, MetaData, Integer, String, Float, SmallInt
 from sqlalchemy.orm import mapper, sessionmaker
 
 class Node(object):
-    def __init__(self, id, lon, lat):
-        self.id = id
+    def __init__(self, id, lon, lat, the_geom = 0):
+        self.original_id = id
         self.lon = lon
         self.lat = lat
+        self.the_geom = the_geom
 
 class Edge(object):
     def __init__(self, id, source, target, length, car, car_rev, bike, bike_rev, foot, the_geom):
@@ -35,8 +36,11 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes"):
         metadata = MetaData()
         nodes_table = Table(nodes_name, metadata,
                 Column('id', Integer, primary_key = True),
-                Column('lon', Float),
-                Column('lat', Float))
+                Column('original_id', Text, Index = True),
+                Column('lon', Float, Index = True),
+                Column('lat', Float, Index = True),
+                Column('the_geom', String)
+                )
         
         edges_table = Table(edges_name, metadata,
             Column('id', Integer, primary_key=True),
@@ -54,7 +58,7 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes"):
         metadata.drop_all(engine)
         metadata.create_all(engine) 
         mapper(Node, nodes_table)
-        mapper(Edge, nodes_table)
+        mapper(Edge, edges_table)
         Session = sessionmaker(bind=engine)
         session = Session()
 
