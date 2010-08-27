@@ -61,9 +61,12 @@ The integers mean:
 You need:
 * Boost (only for unordered_map that will be included in C++1X)
     Read bellow if you have troubles with it
-* expat (XML parser)
-* python
+* expat (XML parser) (Ubuntu users install libexpat1-dev)
+* python (Ubunut users install python-dev)
 * swig
+* Python connectors for the database you wan
+    * sqlite and text output is by default
+    * python-psycopy2 for postgresql
 
 # Just run the following command
 sudo python setup.py install
