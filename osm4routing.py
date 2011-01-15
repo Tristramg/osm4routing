@@ -1,5 +1,4 @@
 from osm4routing_xml import *
-from progressbar import ProgressBar
 import os
 import bz2, gzip
 import sys
@@ -8,10 +7,11 @@ from sqlalchemy import Table, Column, MetaData, Integer, String, Float, SmallInt
 from sqlalchemy.orm import mapper, sessionmaker
 
 class Node(object):
-    def __init__(self, id, lon, lat, the_geom = 0):
+    def __init__(self, id, lon, lat, elevation = 0, the_geom = 0):
         self.original_id = id
         self.lon = lon
         self.lat = lat
+        self.elevation = elevation
         self.the_geom = the_geom
 
 class Edge(object):
@@ -37,6 +37,7 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes"):
         nodes_table = Table(nodes_name, metadata,
                 Column('id', Integer, primary_key = True),
                 Column('original_id', String, index = True),
+                Column('elevation', Integer),
                 Column('lon', Float, index = True),
                 Column('lat', Float, index = True),
                 Column('the_geom', String)
@@ -95,7 +96,6 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes"):
         n = open(nodes_name + '.csv', 'w')
         n.write('"node_id","longitude","latitude"\n')
 
-    pbar = ProgressBar(maxval=len(nodes))
     count = 0
     for node in nodes:
         if output == "csv":
@@ -103,18 +103,15 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes"):
         else:
             session.add(Node(node.id, node.lon, node.lat))
         count += 1
-        pbar.update(count)
     if output == "csv":
         n.close()
     else:
         session.commit()
-    pbar.finish()
 
     print "  Wrote {0} nodes\n".format(count)
 
     print "Step 3: saving the edges"
     edges = p.get_edges()
-    pbar = ProgressBar(maxval=len(edges))
     count = 0
     if output == "csv":
         e = open(edges_name + '.csv', 'w')
@@ -125,12 +122,10 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes"):
         else:
             session.add(Edge(edge.edge_id, edge.source, edge.target, edge.length, edge.car, edge.car_d, edge.bike, edge.bike_d, edge.foot, edge.geom))
         count += 1
-        pbar.update(count)
     if output == "csv":
         e.close()
     else:
         session.commit()
-    pbar.finish()
     print "  Wrote {0} edges\n".format(count)
 
     print "Happy routing :) and please give some feedback!"
