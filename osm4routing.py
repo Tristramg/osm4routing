@@ -5,17 +5,23 @@ import sys
 from optparse import OptionParser
 from sqlalchemy import Table, Column, MetaData, Integer, String, Float, SmallInteger, create_engine
 from sqlalchemy.orm import mapper, sessionmaker
+from geoalchemy import *
 
 class Node(object):
-    def __init__(self, id, lon, lat, elevation = 0, the_geom = 0):
+    def __init__(self, id, lon, lat, elevation = 0, the_geom = 0, spatial=False):
+        wkt_geom = 'POINT({0} {1})'.format(lon, lat)
         self.original_id = id
         self.lon = lon
         self.lat = lat
         self.elevation = elevation
-        self.the_geom = the_geom
+        if spatial:
+            self.the_geom = WKTSpatialElement(wkt_geom)
+        else:
+            self.the_geom = wkt_geom
 
 class Edge(object):
-    def __init__(self, id, source, target, length, car, car_rev, bike, bike_rev, foot, the_geom):
+    def __init__(self, id, source, target, length, car, car_rev, bike, bike_rev, foot, the_geom, spatial=False):
+        wkt_geom = 'LINESTRING({0})'.format(the_geom)
         self.id = id
         self.source = source
         self.target = target
@@ -25,22 +31,32 @@ class Edge(object):
         self.bike = bike
         self.bike_rev = bike
         self.foot = foot
-        self.the_geom = the_geom
+        if spatial:
+            self.the_geom = WKTSpatialElement(wkt_geom)
+        else:
+            self.the_geom = wkt_geom
 
-def parse(file, output="csv", edges_name="edges", nodes_name="nodes"):
 
+def parse(file, output="csv", edges_name="edges", nodes_name="nodes", spatial=False):
     if not os.path.exists(file):
         raise IOError("File {0} not found".format(file))
 
     if output != "csv":
         metadata = MetaData()
+        if(spatial):
+            node_geom = Point(2)
+            edge_geom = LineString(2)
+        else:
+            node_geom = String
+            edge_geom = String
+
         nodes_table = Table(nodes_name, metadata,
                 Column('id', Integer, primary_key = True),
                 Column('original_id', String, index = True),
                 Column('elevation', Integer),
                 Column('lon', Float, index = True),
                 Column('lat', Float, index = True),
-                Column('the_geom', String)
+                Column('the_geom', node_geom)
                 )
         
         edges_table = Table(edges_name, metadata,
@@ -53,7 +69,12 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes"):
             Column('bike', SmallInteger),
             Column('bike_rev', SmallInteger),
             Column('foot', SmallInteger),
-            Column('the_geom', String))
+            Column('the_geom', edge_geom)
+            )
+
+        GeometryDDL(nodes_table)
+        GeometryDDL(edges_table)
+
 
         engine = create_engine(output)
         metadata.drop_all(engine)
@@ -101,7 +122,7 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes"):
         if output == "csv":
             n.write("{0},{1},{2}\n".format(node.id, node.lon, node.lat))
         else:
-            session.add(Node(node.id, node.lon, node.lat))
+            session.add(Node(node.id, node.lon, node.lat, spatial=spatial))
         count += 1
     if output == "csv":
         n.close()
@@ -120,7 +141,7 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes"):
         if output == "csv":
             e.write('{0},{1},{2},{3},{4},{5},{6},{7},{8},LINESTRING("{9}")\n'.format(edge.edge_id, edge.source, edge.target, edge.length, edge.car, edge.car_d, edge.bike, edge.bike_d, edge.foot, edge.geom))
         else:
-            session.add(Edge(edge.edge_id, edge.source, edge.target, edge.length, edge.car, edge.car_d, edge.bike, edge.bike_d, edge.foot, edge.geom))
+            session.add(Edge(edge.edge_id, edge.source, edge.target, edge.length, edge.car, edge.car_d, edge.bike, edge.bike_d, edge.foot, edge.geom, spatial=spatial))
         count += 1
     if output == "csv":
         e.close()
@@ -143,6 +164,7 @@ a connection string to use a database (Example: sqlite:///foo.db postgresql://jo
 [default: %default]""")
     parser.add_option("-n", "--nodes_name", dest="nodes_name", default="nodes", help="Name of the file or table where nodes are stored [default: %default]")
     parser.add_option("-e", "--edges_name", dest="edges_name", default="edges", help="Name of the file or table where edges are stored [default: %default]")
+    parser.add_option("-s", "--spatial", dest="spatial", default=False, action="store_true", help="Is the database spatial? If yes, it creates spatial indexes on the column the_geom. Read about geoalchemy to know what databases are supported (only spatial was tested)")
     (options, args) = parser.parse_args()
 
     if len(args) != 1:
@@ -150,7 +172,7 @@ a connection string to use a database (Example: sqlite:///foo.db postgresql://jo
         sys.exit(1)
 
     try:
-        parse(args[0], options.output, options.edges_name, options.nodes_name)
+        parse(args[0], options.output, options.edges_name, options.nodes_name, options.spatial)
     except IOError as e:
         sys.stderr.write("I/O error: {0}\n".format(e))
     except Exception as e:
