@@ -52,7 +52,7 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes", spatial=Fa
 
         nodes_table = Table(nodes_name, metadata,
                 Column('id', Integer, primary_key = True),
-                Column('original_id', String, index = True),
+                Column('original_id', Integer, index = True),
                 Column('elevation', Integer),
                 Column('lon', Float, index = True),
                 Column('lat', Float, index = True),
