@@ -139,7 +139,7 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes", spatial=Fa
         e.write('"edge_id","source","target","length","car","car reverse","bike","bike reverse","foot","WKT"\n')
     for edge in edges:
         if output == "csv":
-            e.write('{0},{1},{2},{3},{4},{5},{6},{7},{8},LINESTRING("{9}")\n'.format(edge.edge_id, edge.source, edge.target, edge.length, edge.car, edge.car_d, edge.bike, edge.bike_d, edge.foot, edge.geom))
+            e.write('{0},{1},{2},{3},{4},{5},{6},{7},{8},LINESTRING({9})\n'.format(edge.edge_id, edge.source, edge.target, edge.length, edge.car, edge.car_d, edge.bike, edge.bike_d, edge.foot, edge.geom))
         else:
             session.add(Edge(edge.edge_id, edge.source, edge.target, edge.length, edge.car, edge.car_d, edge.bike, edge.bike_d, edge.foot, edge.geom, spatial=spatial))
         count += 1
