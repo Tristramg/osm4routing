@@ -91,7 +91,6 @@ struct Parser
 {
     Node * source;
     Node * prev;
-    std::stringstream geom;
     NodeMapType nodes;
     node_t ways_count;
     int edge_length;
