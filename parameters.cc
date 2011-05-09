@@ -108,7 +108,7 @@ bool Edge_property::update(const std::string & key, const std::string & val)
         }
         else if(val == "trunk" || val == "trunk_link")
         {
-            car_direct = car_motorway;
+            car_direct = car_trunk;
             foot = foot_forbiden;
             bike_direct = bike_forbiden;
         }
