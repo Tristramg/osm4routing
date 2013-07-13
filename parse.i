@@ -35,9 +35,9 @@ class Edge_property
 
 struct Edge
 { 
-    int edge_id;
-    int source;
-    int target;
+    unsigned long edge_id;
+    unsigned long source;
+    unsigned long target;
     float length;
     char car;
     char car_d;
@@ -49,7 +49,7 @@ struct Edge
 
 struct Node
 {
-    int id;
+    unsigned long id;
     double lon;
     double lat;
     char uses;
