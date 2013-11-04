@@ -66,9 +66,9 @@ struct Node
 
 struct Edge
 { 
-    int edge_id;
-    int source;
-    int target;
+    unsigned long long edge_id;
+    unsigned long long source;
+    unsigned long long target;
     float length;
     char car;
     char car_d;
@@ -106,7 +106,7 @@ struct Parser
     void read(char *, int, bool);
     std::vector<Node> get_nodes() const;
     std::vector<Edge> get_edges() const;
-    int get_osm_nodes() const;
-    int get_osm_ways() const;
+    unsigned long get_osm_nodes() const;
+    unsigned long long get_osm_ways() const;
 
 };
