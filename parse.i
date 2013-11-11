@@ -35,9 +35,9 @@ class Edge_property
 
 struct Edge
 { 
-    unsigned long edge_id;
-    unsigned long source;
-    unsigned long target;
+    unsigned long long edge_id;
+    unsigned long long source;
+    unsigned long long target;
     float length;
     char car;
     char car_d;

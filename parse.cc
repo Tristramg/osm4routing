@@ -222,12 +222,12 @@ vector<Edge> Parser::get_edges() const
     return ret;
 }
 
-int Parser::get_osm_nodes() const
+unsigned long Parser::get_osm_nodes() const
 {
     return nodes.size();
 }
 
-int Parser::get_osm_ways() const
+unsigned long long Parser::get_osm_ways() const
 {
     return ways_count;
 }
