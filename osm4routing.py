@@ -168,7 +168,7 @@ a connection string to use a database (Example: sqlite:///foo.db postgresql://jo
     (options, args) = parser.parse_args()
 
     if len(args) != 1:
-        sys.stderr.write("Wrong number of argumented. Expected 1, got {0}\n".format(len(args)))
+        sys.stderr.write("Wrong number of arguments. Expected 1, got {0}\n".format(len(args)))
         sys.exit(1)
 
     try:
