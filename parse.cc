@@ -21,7 +21,8 @@ double distance(double lon1, double lat1, double lon2, double lat2)
             cos( rad(lat1) ) * cos( rad(lat2) ) * cos( rad(lon2-lon1 ) )
             ) * r;
 }
-   void
+
+void
 start(void * data, const char *el, const char **attr)
 {
     Parser * d = (Parser*) data;
@@ -185,35 +186,52 @@ vector<Edge> Parser::get_edges() const
     {
         stringstream way(line);
         way >> foot >> car_direct >> car_rev >> bike_direct >> bike_rev >> nb;
+        bool first_node = true;
+
+        // We skip the edge if there is an invalid node
+        bool skip_edge = false;
         for(int i=0; i<nb; i++)
         {
             way >> id;
             n = nodes.at(id);
 
-            if(i == 0)
+            if(n.valid)
             {
-                geom.str("");
-                source = id;
+                if(first_node)
+                {
+                    geom.str("");
+                    source = id;
+                    first_node = false;
+                }
+                else
+                {
+                    length += distance(n.lon, n.lat, pred_lon, pred_lat);
+                    if(geom.str() != "")
+                        geom << ",";
+                }
+
+                pred_lon = n.lon;
+                pred_lat = n.lat;
+
+                geom << n.lon << " " << n.lat;
+                if( !first_node && n.uses > 1 && id != source)
+                {
+                    if(!skip_edge)
+                    {
+                      ret.push_back(Edge(edges_inserted, source, id, length, car_direct, car_rev, bike_direct, bike_rev, foot, geom.str()));
+                    }
+
+                    edges_inserted++;
+                    length = 0;
+                    geom.str("");
+                    geom << n.lon << " " << n.lat;
+                    source = id;
+                    skip_edge = false;
+                }
             }
             else
             {
-                length += distance(n.lon, n.lat, pred_lon, pred_lat);
-                if(geom.str() != "")
-                    geom << ",";
-            }
-
-            pred_lon = n.lon;
-            pred_lat = n.lat;
-
-            geom << n.lon << " " << n.lat;
-            if( i>0 && n.uses > 1 && id != source)
-            {
-                ret.push_back(Edge(edges_inserted, source, id, length, car_direct, car_rev, bike_direct, bike_rev, foot, geom.str()));
-                edges_inserted++;
-                length = 0;
-                geom.str("");
-                geom << n.lon << " " << n.lat;
-                source = id;
+              skip_edge = true;
             }
         }
     }

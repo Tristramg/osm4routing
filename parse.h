@@ -52,15 +52,23 @@ class Edge_property
 
 struct Node
 {
-    uint64_t id;
+    node_t id;
     double lon;
     double lat;
+    
+    // By how many ways has this node been used
+    // This allows to detect a street intersection
     char uses;
 
-    Node() : uses(0) {};
+    // Is this node valid:
+    // In some exports, a way references a node that isn’t in the data
+    // This causes bad coordinates
+    bool valid;
 
-    Node(double _lon, double _lat, uint64_t _id) :
-        id(_id), lon(_lon), lat(_lat), uses(0)
+    Node() : uses(0), valid(false) {};
+
+    Node(double _lon, double _lat, node_t _id) :
+        id(_id), lon(_lon), lat(_lat), uses(0), valid(true)
     {};
 };
 
