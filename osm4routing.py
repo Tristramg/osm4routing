@@ -3,7 +3,7 @@ import os
 import bz2, gzip
 import sys
 from optparse import OptionParser
-from sqlalchemy import Table, Column, MetaData, Integer, String, Float, SmallInteger, create_engine
+from sqlalchemy import Table, Column, MetaData, Integer, BigInteger, String, Float, SmallInteger, create_engine
 from sqlalchemy.orm import mapper, sessionmaker
 from geoalchemy import *
 
@@ -52,7 +52,7 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes", spatial=Fa
 
         nodes_table = Table(nodes_name, metadata,
                 Column('id', Integer, primary_key = True),
-                Column('original_id', Integer, index = True),
+                Column('original_id', BigInteger, index = True),
                 Column('elevation', Integer),
                 Column('lon', Float, index = True),
                 Column('lat', Float, index = True),
@@ -61,8 +61,8 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes", spatial=Fa
         
         edges_table = Table(edges_name, metadata,
             Column('id', Integer, primary_key=True),
-            Column('source', Integer, index=True),
-            Column('target', Integer, index=True),
+            Column('source', BigInteger, index=True),
+            Column('target', BigInteger, index=True),
             Column('length', Float),
             Column('car', SmallInteger),
             Column('car_rev', SmallInteger),
