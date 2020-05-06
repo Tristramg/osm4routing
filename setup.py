@@ -3,9 +3,6 @@
 boost_path = "."
 
 
-from distribute_setup import use_setuptools
-use_setuptools()
-
 from setuptools import setup, find_packages, Extension
 setup(name='Osm4routing',
       version='1.0.6',
