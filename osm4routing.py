@@ -86,22 +86,22 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes", spatial=Fa
 
     extension = os.path.splitext(file)[1]
     if extension == '.bz2':
-        print "Recognized as bzip2 file"
+        print("Recognized as bzip2 file")
         f = bz2.BZ2File(file, 'r') 
 
     elif extension == '.gz':
-        print "Recognized as gzip2 file"
+        print("Recognized as gzip2 file")
         f = gzip.open(file, 'r') 
 
     else:
-        print "Supposing OSM/xml file"
+        print("Supposing OSM/xml file")
         filesize = os.path.getsize(file)
         f = open(file, 'r') 
 
     buffer_size = 4096
     p = Parser()
     eof = False
-    print "Step 1: reading file {0}".format(file)
+    print("Step 1: reading file {0}".format(file))
     read = 0
     while not eof:
         s = f.read(buffer_size)
@@ -109,9 +109,9 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes", spatial=Fa
         p.read(s, len(s), eof)
         read += len(s)
 
-    print "  Read {0} nodes and {1} ways\n".format(p.get_osm_nodes(), p.get_osm_ways())
+    print("  Read {0} nodes and {1} ways\n".format(p.get_osm_nodes(), p.get_osm_ways()))
 
-    print "Step 2: saving the nodes"
+    print("Step 2: saving the nodes")
     nodes = p.get_nodes()
     if output == "csv":
         n = open(nodes_name + '.csv', 'w')
@@ -129,9 +129,9 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes", spatial=Fa
     else:
         session.commit()
 
-    print "  Wrote {0} nodes\n".format(count)
+    print("  Wrote {0} nodes\n".format(count))
 
-    print "Step 3: saving the edges"
+    print("Step 3: saving the edges")
     edges = p.get_edges()
     count = 0
     if output == "csv":
@@ -147,9 +147,9 @@ def parse(file, output="csv", edges_name="edges", nodes_name="nodes", spatial=Fa
         e.close()
     else:
         session.commit()
-    print "  Wrote {0} edges\n".format(count)
+    print("  Wrote {0} edges\n".format(count))
 
-    print "Happy routing :) and please give some feedback!"
+    print("Happy routing :) and please give some feedback!")
 
 def main():
     usage = """Usage: %prog [options] input_file
