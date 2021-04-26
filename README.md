@@ -1,3 +1,9 @@
+# This project is DEPRECATED
+
+Please have a look at https://github.com/Tristramg/osm4routing2
+
+---
+
 This tool provides an OpenStreetMap data parser to turn them into a nodes-edges
 adapted for routing applications.
 
